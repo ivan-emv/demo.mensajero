@@ -2,11 +2,6 @@ import streamlit as st
 from datetime import datetime
 import pandas as pd
 
-# ============================================================
-# APP DEMO - MENSAJERO INTERNO
-# Demo conceptual sin envío real ni integración con base de datos
-# ============================================================
-
 st.set_page_config(
     page_title="Demo Mensajero Interno",
     page_icon="✉️",
@@ -14,27 +9,50 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# -----------------------------
-# Catálogos demo
-# -----------------------------
+TEMPORADAS = ["2025/2026", "2026/2027", "2027/2028"]
 
-TIPOS_MENSAJE = [
-    "SECTOR",
-    "VIAJE REAL",
-    "ROOMING",
-    "POR CIUDAD",
-    "POR BUS",
-    "APP",
+TIPOS_MENSAJE = ["VIAJE REAL", "APP"]
+
+VIAJES_REALES = [
+    "SCTOPO",
+    "SCANDALU",
+    "MIESTE",
+    "SCTPAR",
+    "SCTROM",
 ]
 
-SUBOPCIONES = {
-    "SECTOR": ["Operaciones", "Atención al Cliente", "Traslados", "Guías", "Producto", "Administración"],
-    "VIAJE REAL": ["SCTOPO", "SCTPAR", "SCTMAD", "SCTROM", "SCTEUR"],
-    "ROOMING": ["1 ROOMING", "VARIAS ROOMING"],
-    "POR CIUDAD": ["1 CIUDAD", "VARIAS CIUDADES"],
-    "POR BUS": ["BUS 1", "BUS 2", "BUS 3", "BUS 4", "BUS 5"],
-    "APP": ["App Cliente", "App Guía", "App Operador", "App Interna"],
-}
+ALCANCES_VIAJE = ["SECTOR", "ROOMING", "CIUDAD"]
+
+SECTORES_DEMO = [
+    "MADRID",
+    "MADRID-GRANADA",
+    "MADRID-OPORTO",
+    "BURDEOS-PARÍS",
+    "ROMA-FLORENCIA",
+]
+
+ROOMINGS_DEMO = [
+    "RMG-SCTOPO-01",
+    "RMG-SCTOPO-02",
+    "RMG-SCANDALU-01",
+    "RMG-MIESTE-01",
+]
+
+CIUDADES_DEMO = [
+    "Madrid",
+    "Granada",
+    "Oporto",
+    "Burdeos",
+    "París",
+    "Roma",
+]
+
+APP_OPCIONES = [
+    "App Cliente",
+    "App Guía",
+    "App Operador",
+    "App Interna",
+]
 
 DESTINOS_NOTA = [
     "Observaciones del Resumen de Servicios",
@@ -54,420 +72,271 @@ RESERVAS_DEMO = [
     "EMV-100246",
     "EMV-100247",
     "EMV-100248",
-    "EMV-100249",
-    "EMV-100250",
 ]
-
-CIUDADES_DEMO = [
-    "Madrid",
-    "Barcelona",
-    "París",
-    "Roma",
-    "Lisboa",
-    "Londres",
-    "Ámsterdam",
-]
-
-ROOMINGS_DEMO = [
-    "RMG-SCTOPO-01",
-    "RMG-SCTOPO-02",
-    "RMG-SCTPAR-01",
-    "RMG-SCTROM-01",
-]
-
-
-# -----------------------------
-# Estado de sesión
-# -----------------------------
 
 if "mensajes" not in st.session_state:
     st.session_state.mensajes = []
 
-if "contador" not in st.session_state:
-    st.session_state.contador = 1
-
-
-def limpiar_formulario():
-    """Incrementa el contador para regenerar claves de widgets y limpiar campos."""
-    st.session_state.contador += 1
-
-
-def registrar_mensaje(payload: dict):
-    st.session_state.mensajes.insert(0, payload)
-
-
-def obtener_detalle_contexto(tipo_mensaje, subopcion, seleccion_multiple):
-    if tipo_mensaje == "ROOMING":
-        return ", ".join(seleccion_multiple) if seleccion_multiple else subopcion
-    if tipo_mensaje == "POR CIUDAD":
-        return ", ".join(seleccion_multiple) if seleccion_multiple else subopcion
-    return subopcion
-
-
-# -----------------------------
-# Estilos básicos
-# -----------------------------
-
-st.markdown(
-    """
-    <style>
-    .main-title {
-        font-size: 2.2rem;
-        font-weight: 800;
-        margin-bottom: 0.2rem;
-    }
-    .subtitle {
-        color: #5f6368;
-        font-size: 1rem;
-        margin-bottom: 1.5rem;
-    }
-    .demo-box {
-        padding: 1rem;
-        border-radius: 0.75rem;
-        background-color: #f7f9fc;
-        border: 1px solid #e3e8ef;
-        margin-bottom: 1rem;
-    }
-    .metric-label {
-        font-size: 0.85rem;
-        color: #5f6368;
-    }
-    .metric-value {
-        font-size: 1.2rem;
-        font-weight: 700;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-
-# -----------------------------
-# Sidebar
-# -----------------------------
+st.title("✉️ Demo Mensajero Interno")
+st.caption("Prototipo conceptual para demostrar el flujo de carga de mensajes internos.")
 
 with st.sidebar:
-    st.image("https://static.streamlit.io/examples/cat.jpg", width=80)
-    st.title("Mensajero Demo")
-    st.caption("Prototipo interno para validación de flujo.")
-
-    st.divider()
-
-    st.subheader("Indicadores Demo")
+    st.header("Panel Demo")
     st.metric("Mensajes generados", len(st.session_state.mensajes))
-    mensajes_futuros = sum(1 for m in st.session_state.mensajes if m["agregar_a_nuevas_reservas"])
-    st.metric("Mensajes aplicables a futuras reservas", mensajes_futuros)
 
-    st.divider()
-
-    if st.button("🧹 Limpiar historial demo", use_container_width=True):
+    if st.button("Limpiar historial"):
         st.session_state.mensajes = []
-        st.success("Historial eliminado correctamente.")
+        st.rerun()
 
-
-# -----------------------------
-# Encabezado
-# -----------------------------
-
-st.markdown('<div class="main-title">✉️ Demo Mensajero Interno</div>', unsafe_allow_html=True)
-st.markdown(
-    '<div class="subtitle">Herramienta conceptual para simular la creación y aplicación de mensajes internos sobre reservas, viajes, buses, ciudades, roomings o aplicaciones.</div>',
-    unsafe_allow_html=True,
-)
-
-col_info_1, col_info_2, col_info_3 = st.columns(3)
-with col_info_1:
-    st.info("Demo sin envío real ni escritura en base de datos.")
-with col_info_2:
-    st.info("Permite validar lógica de negocio y experiencia de usuario.")
-with col_info_3:
-    st.info("Preparada para futura integración con Google Sheets, Firestore o API interna.")
-
-
-# -----------------------------
-# Formulario principal
-# -----------------------------
-
-st.subheader("1. Crear nuevo mensaje")
-
-key_suffix = st.session_state.contador
+st.subheader("1. Crear mensaje")
 
 with st.container(border=True):
-    col1, col2 = st.columns([1, 1])
+    temporada = st.selectbox(
+        "Temporada",
+        TEMPORADAS,
+        index=None,
+        placeholder="Seleccione la temporada...",
+    )
 
-    with col1:
-        tipo_mensaje = st.selectbox(
-            "Tipo de mensaje",
-            TIPOS_MENSAJE,
+    tipo_mensaje = st.selectbox(
+        "Tipo de Mensaje",
+        TIPOS_MENSAJE,
+        index=None,
+        placeholder="Seleccione el tipo de mensaje...",
+    )
+
+    viaje_real = None
+    alcance_viaje = None
+    detalle_alcance = None
+    seleccion_detalle = []
+
+    if tipo_mensaje == "VIAJE REAL":
+        viaje_real = st.selectbox(
+            "Viaje Real",
+            VIAJES_REALES,
             index=None,
-            placeholder="Seleccione el tipo de mensaje...",
-            key=f"tipo_mensaje_{key_suffix}",
+            placeholder="Seleccione el viaje real...",
         )
 
-    with col2:
-        subopcion = None
-        if tipo_mensaje:
-            subopcion = st.selectbox(
-                "Segunda opción / criterio",
-                SUBOPCIONES[tipo_mensaje],
-                index=None,
-                placeholder="Seleccione una opción...",
-                key=f"subopcion_{key_suffix}",
-            )
-        else:
-            st.selectbox(
-                "Segunda opción / criterio",
-                [],
-                index=None,
-                placeholder="Primero seleccione el tipo de mensaje",
-                disabled=True,
-                key=f"subopcion_disabled_{key_suffix}",
-            )
-
-    seleccion_multiple = []
-
-    if tipo_mensaje == "ROOMING" and subopcion == "VARIAS ROOMING":
-        seleccion_multiple = st.multiselect(
-            "Seleccione las roomings afectadas",
-            ROOMINGS_DEMO,
-            placeholder="Seleccione una o varias roomings...",
-            key=f"roomings_{key_suffix}",
-        )
-
-    if tipo_mensaje == "POR CIUDAD" and subopcion == "VARIAS CIUDADES":
-        seleccion_multiple = st.multiselect(
-            "Seleccione las ciudades afectadas",
-            CIUDADES_DEMO,
-            placeholder="Seleccione una o varias ciudades...",
-            key=f"ciudades_{key_suffix}",
-        )
-
-    if tipo_mensaje == "POR CIUDAD" and subopcion == "1 CIUDAD":
-        ciudad_unica = st.selectbox(
-            "Ciudad",
-            CIUDADES_DEMO,
+        alcance_viaje = st.selectbox(
+            "Alcance dentro del viaje",
+            ALCANCES_VIAJE,
             index=None,
-            placeholder="Seleccione la ciudad...",
-            key=f"ciudad_unica_{key_suffix}",
+            placeholder="Seleccione SECTOR, ROOMING o CIUDAD...",
         )
-        seleccion_multiple = [ciudad_unica] if ciudad_unica else []
+
+        if alcance_viaje == "SECTOR":
+            seleccion_detalle = st.multiselect(
+                "Sector / tramo específico",
+                SECTORES_DEMO,
+                placeholder="Seleccione uno o varios sectores...",
+            )
+            detalle_alcance = ", ".join(seleccion_detalle)
+
+        elif alcance_viaje == "ROOMING":
+            tipo_rooming = st.radio(
+                "Tipo de Rooming",
+                ["1 ROOMING", "VARIAS ROOMING"],
+                horizontal=True,
+                index=None,
+            )
+
+            if tipo_rooming == "1 ROOMING":
+                rooming = st.selectbox(
+                    "Rooming",
+                    ROOMINGS_DEMO,
+                    index=None,
+                    placeholder="Seleccione una rooming...",
+                )
+                seleccion_detalle = [rooming] if rooming else []
+                detalle_alcance = rooming
+
+            elif tipo_rooming == "VARIAS ROOMING":
+                seleccion_detalle = st.multiselect(
+                    "Roomings",
+                    ROOMINGS_DEMO,
+                    placeholder="Seleccione una o varias roomings...",
+                )
+                detalle_alcance = ", ".join(seleccion_detalle)
+
+        elif alcance_viaje == "CIUDAD":
+            tipo_ciudad = st.radio(
+                "Tipo de Ciudad",
+                ["1 CIUDAD", "VARIAS CIUDADES"],
+                horizontal=True,
+                index=None,
+            )
+
+            if tipo_ciudad == "1 CIUDAD":
+                ciudad = st.selectbox(
+                    "Ciudad",
+                    CIUDADES_DEMO,
+                    index=None,
+                    placeholder="Seleccione una ciudad...",
+                )
+                seleccion_detalle = [ciudad] if ciudad else []
+                detalle_alcance = ciudad
+
+            elif tipo_ciudad == "VARIAS CIUDADES":
+                seleccion_detalle = st.multiselect(
+                    "Ciudades",
+                    CIUDADES_DEMO,
+                    placeholder="Seleccione una o varias ciudades...",
+                )
+                detalle_alcance = ", ".join(seleccion_detalle)
+
+    elif tipo_mensaje == "APP":
+        viaje_real = "No aplica"
+        alcance_viaje = "APP"
+
+        detalle_alcance = st.selectbox(
+            "Opción APP",
+            APP_OPCIONES,
+            index=None,
+            placeholder="Seleccione la opción APP...",
+        )
 
     agregar_a_nuevas_reservas = st.checkbox(
         "Agregar este mensaje a nuevas reservas",
-        help="Simula que el mensaje quedará asociado a futuras reservas que cumplan el criterio seleccionado.",
-        key=f"agregar_futuras_{key_suffix}",
+        help="Si se selecciona, el mensaje se adicionará a futuras reservas asociadas al criterio elegido.",
     )
-
-    st.divider()
 
     destino_nota = st.radio(
-        "Destino de la nota",
+        "Destino de la Nota",
         DESTINOS_NOTA,
         index=None,
-        horizontal=False,
-        key=f"destino_{key_suffix}",
     )
 
-    alcance = st.radio(
+    alcance_reservas = st.radio(
         "El mensaje puede dirigirse a",
         ALCANCE_RESERVAS,
-        index=None,
         horizontal=True,
-        key=f"alcance_{key_suffix}",
+        index=None,
     )
 
     reservas_seleccionadas = []
 
-    if alcance == "Reserva Específica":
+    if alcance_reservas == "Reserva Específica":
         reserva = st.selectbox(
             "Reserva",
             RESERVAS_DEMO,
             index=None,
-            placeholder="Seleccione la reserva...",
-            key=f"reserva_unica_{key_suffix}",
+            placeholder="Seleccione una reserva...",
         )
         reservas_seleccionadas = [reserva] if reserva else []
 
-    elif alcance == "Varias Reservas":
+    elif alcance_reservas == "Varias Reservas":
         reservas_seleccionadas = st.multiselect(
             "Reservas",
             RESERVAS_DEMO,
             placeholder="Seleccione una o varias reservas...",
-            key=f"reservas_varias_{key_suffix}",
         )
 
-    elif alcance == "Todas las Reservas":
-        st.warning("Demo: el mensaje se aplicará a todas las reservas que cumplan el criterio seleccionado.")
+    elif alcance_reservas == "Todas las Reservas":
         reservas_seleccionadas = ["Todas las Reservas"]
+        st.warning("El mensaje se aplicará a todas las reservas que cumplan el criterio seleccionado.")
 
     st.divider()
 
+    st.markdown("### Resumen del criterio")
+    st.info(
+        f"{temporada or 'Temporada'} → "
+        f"{tipo_mensaje or 'Tipo'} → "
+        f"{viaje_real or 'Viaje'} → "
+        f"{alcance_viaje or 'Alcance'} → "
+        f"{detalle_alcance or 'Detalle'}"
+    )
+
     asunto = st.text_input(
         "Título interno del mensaje",
-        placeholder="Ej.: Cambio de horario de traslado / Observación para guía / Aviso operativo",
-        key=f"asunto_{key_suffix}",
+        placeholder="Ej.: Cambio de horario de traslado",
     )
 
     mensaje = st.text_area(
         "Mensaje",
         placeholder="Ingrese aquí el contenido del mensaje interno...",
-        height=180,
-        key=f"mensaje_{key_suffix}",
+        height=160,
     )
 
-    prioridad = st.select_slider(
+    prioridad = st.selectbox(
         "Prioridad",
-        options=["Baja", "Media", "Alta", "Crítica"],
-        value="Media",
-        key=f"prioridad_{key_suffix}",
+        ["Baja", "Media", "Alta", "Crítica"],
+        index=1,
     )
 
-    col_btn1, col_btn2 = st.columns([1, 1])
-
-    with col_btn1:
-        guardar = st.button("💾 Generar mensaje demo", type="primary", use_container_width=True)
-
-    with col_btn2:
-        if st.button("↩️ Limpiar formulario", use_container_width=True):
-            limpiar_formulario()
-            st.rerun()
+    guardar = st.button("💾 Generar mensaje demo", type="primary")
 
     if guardar:
         errores = []
 
+        if not temporada:
+            errores.append("Debe seleccionar la temporada.")
+
         if not tipo_mensaje:
             errores.append("Debe seleccionar el tipo de mensaje.")
-        if tipo_mensaje and not subopcion:
-            errores.append("Debe seleccionar la segunda opción / criterio.")
-        if tipo_mensaje in ["ROOMING", "POR CIUDAD"] and subopcion in ["VARIAS ROOMING", "VARIAS CIUDADES"] and not seleccion_multiple:
-            errores.append("Debe seleccionar al menos un elemento en la selección múltiple.")
-        if tipo_mensaje == "POR CIUDAD" and subopcion == "1 CIUDAD" and not seleccion_multiple:
-            errores.append("Debe seleccionar una ciudad.")
+
+        if tipo_mensaje == "VIAJE REAL":
+            if not viaje_real:
+                errores.append("Debe seleccionar el viaje real.")
+            if not alcance_viaje:
+                errores.append("Debe seleccionar el alcance dentro del viaje.")
+            if alcance_viaje in ["SECTOR", "ROOMING", "CIUDAD"] and not seleccion_detalle:
+                errores.append("Debe seleccionar al menos un detalle del alcance.")
+
+        if tipo_mensaje == "APP" and not detalle_alcance:
+            errores.append("Debe seleccionar una opción APP.")
+
         if not destino_nota:
             errores.append("Debe seleccionar el destino de la nota.")
-        if not alcance:
-            errores.append("Debe seleccionar el alcance de reservas.")
-        if alcance in ["Reserva Específica", "Varias Reservas"] and not reservas_seleccionadas:
+
+        if not alcance_reservas:
+            errores.append("Debe seleccionar a qué reservas se dirige el mensaje.")
+
+        if alcance_reservas in ["Reserva Específica", "Varias Reservas"] and not reservas_seleccionadas:
             errores.append("Debe seleccionar al menos una reserva.")
+
         if not asunto.strip():
-            errores.append("Debe ingresar un título interno del mensaje.")
+            errores.append("Debe ingresar un título interno.")
+
         if not mensaje.strip():
-            errores.append("Debe ingresar el contenido del mensaje.")
+            errores.append("Debe ingresar el mensaje.")
 
         if errores:
             for error in errores:
                 st.error(error)
         else:
-            payload = {
-                "fecha_hora": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
-                "tipo_mensaje": tipo_mensaje,
-                "criterio": obtener_detalle_contexto(tipo_mensaje, subopcion, seleccion_multiple),
-                "agregar_a_nuevas_reservas": agregar_a_nuevas_reservas,
-                "destino_nota": destino_nota,
-                "alcance": alcance,
-                "reservas": ", ".join(reservas_seleccionadas),
-                "asunto": asunto.strip(),
-                "mensaje": mensaje.strip(),
-                "prioridad": prioridad,
-                "estado_demo": "Generado - Sin envío real",
+            nuevo_mensaje = {
+                "Fecha/Hora": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+                "Temporada": temporada,
+                "Tipo Mensaje": tipo_mensaje,
+                "Viaje Real": viaje_real,
+                "Alcance Viaje": alcance_viaje,
+                "Detalle Alcance": detalle_alcance,
+                "Agregar a Nuevas Reservas": "Sí" if agregar_a_nuevas_reservas else "No",
+                "Destino Nota": destino_nota,
+                "Alcance Reservas": alcance_reservas,
+                "Reservas": ", ".join(reservas_seleccionadas),
+                "Título": asunto,
+                "Mensaje": mensaje,
+                "Prioridad": prioridad,
+                "Estado": "Demo - No enviado",
             }
 
-            registrar_mensaje(payload)
+            st.session_state.mensajes.insert(0, nuevo_mensaje)
             st.success("Mensaje demo generado correctamente.")
-            st.balloons()
 
-
-# -----------------------------
-# Vista previa del último mensaje
-# -----------------------------
-
-if st.session_state.mensajes:
-    st.subheader("2. Vista previa del último mensaje generado")
-
-    ultimo = st.session_state.mensajes[0]
-
-    with st.container(border=True):
-        col_a, col_b, col_c = st.columns(3)
-
-        with col_a:
-            st.markdown('<div class="metric-label">Tipo / Criterio</div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="metric-value">{ultimo["tipo_mensaje"]}</div>', unsafe_allow_html=True)
-            st.caption(ultimo["criterio"])
-
-        with col_b:
-            st.markdown('<div class="metric-label">Destino</div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="metric-value">{ultimo["destino_nota"]}</div>', unsafe_allow_html=True)
-
-        with col_c:
-            st.markdown('<div class="metric-label">Alcance</div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="metric-value">{ultimo["alcance"]}</div>', unsafe_allow_html=True)
-            st.caption(ultimo["reservas"])
-
-        st.divider()
-
-        st.markdown(f"**Título:** {ultimo['asunto']}")
-        st.markdown(f"**Prioridad:** {ultimo['prioridad']}")
-        st.markdown(f"**Agregar a nuevas reservas:** {'Sí' if ultimo['agregar_a_nuevas_reservas'] else 'No'}")
-        st.markdown("**Mensaje:**")
-        st.write(ultimo["mensaje"])
-
-        st.info("Esta vista simula cómo quedaría registrado el mensaje. No se envía ni se guarda fuera de la sesión actual.")
-
-
-# -----------------------------
-# Historial demo
-# -----------------------------
-
-st.subheader("3. Historial demo de mensajes")
+st.subheader("2. Historial demo")
 
 if st.session_state.mensajes:
     df = pd.DataFrame(st.session_state.mensajes)
-    st.dataframe(
-        df,
-        use_container_width=True,
-        hide_index=True,
-        column_config={
-            "mensaje": st.column_config.TextColumn("Mensaje", width="large"),
-            "agregar_a_nuevas_reservas": st.column_config.CheckboxColumn("Futuras reservas"),
-        },
-    )
+    st.dataframe(df, use_container_width=True, hide_index=True)
 
     csv = df.to_csv(index=False).encode("utf-8-sig")
     st.download_button(
-        "⬇️ Descargar historial demo en CSV",
+        "⬇️ Descargar historial CSV",
         data=csv,
         file_name="historial_mensajes_demo.csv",
         mime="text/csv",
-        use_container_width=True,
     )
 else:
-    st.caption("Aún no se generaron mensajes en esta sesión.")
-
-
-# -----------------------------
-# Roadmap sugerido
-# -----------------------------
-
-with st.expander("Roadmap sugerido para convertir esta demo en herramienta real"):
-    st.markdown(
-        """
-        **Fase 1 — Validación funcional**
-        - Confirmar tipos de mensaje, destinos y reglas de aplicación.
-        - Validar permisos por perfil de usuario.
-        - Definir trazabilidad requerida.
-
-        **Fase 2 — Persistencia**
-        - Guardar mensajes en Google Sheets, Firestore o base SQL.
-        - Registrar usuario creador, fecha, edición y estado.
-
-        **Fase 3 — Integración operativa**
-        - Conectar con reservas reales.
-        - Aplicar mensajes automáticamente a futuras reservas según criterio.
-        - Incorporar auditoría y control de cambios.
-
-        **Fase 4 — Gobernanza**
-        - Roles: lectura, creación, aprobación y administración.
-        - Historial completo por reserva, viaje, bus, ciudad o rooming.
-        """
-    )
-
+    st.caption("Aún no se generaron mensajes.")
