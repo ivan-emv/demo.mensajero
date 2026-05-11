@@ -72,6 +72,8 @@ RESERVAS_DEMO = [
     "EMV-100246",
     "EMV-100247",
     "EMV-100248",
+    "EMV-100249",
+    "EMV-100250",
 ]
 
 if "mensajes" not in st.session_state:
@@ -196,6 +198,8 @@ with st.container(border=True):
             placeholder="Seleccione la opción APP...",
         )
 
+        seleccion_detalle = [detalle_alcance] if detalle_alcance else []
+
     agregar_a_nuevas_reservas = st.checkbox(
         "Agregar este mensaje a nuevas reservas",
         help="Si se selecciona, el mensaje se adicionará a futuras reservas asociadas al criterio elegido.",
@@ -215,22 +219,49 @@ with st.container(border=True):
     )
 
     reservas_seleccionadas = []
+    modo_carga_reservas = None
 
     if alcance_reservas == "Reserva Específica":
-        reserva = st.selectbox(
-            "Reserva",
-            RESERVAS_DEMO,
-            index=None,
-            placeholder="Seleccione una reserva...",
+        localizador = st.text_input(
+            "Localizador",
+            placeholder="Ej.: AB123456",
+            help="Ingrese manualmente el localizador de la reserva.",
         )
-        reservas_seleccionadas = [reserva] if reserva else []
+
+        reservas_seleccionadas = [localizador.strip().upper()] if localizador.strip() else []
 
     elif alcance_reservas == "Varias Reservas":
-        reservas_seleccionadas = st.multiselect(
-            "Reservas",
-            RESERVAS_DEMO,
-            placeholder="Seleccione una o varias reservas...",
+        modo_carga_reservas = st.radio(
+            "Modo de selección de reservas",
+            [
+                "Escribir manualmente",
+                "Seleccionar reservas según datos del viaje",
+            ],
+            horizontal=True,
+            index=None,
         )
+
+        if modo_carga_reservas == "Escribir manualmente":
+            localizadores_texto = st.text_area(
+                "Localizadores",
+                placeholder="Ingrese un localizador por línea. Ej.:\nAB123456\nCD789012\nEF345678",
+                height=120,
+                help="Puede escribir varios localizadores, uno por línea.",
+            )
+
+            reservas_seleccionadas = [
+                loc.strip().upper()
+                for loc in localizadores_texto.splitlines()
+                if loc.strip()
+            ]
+
+        elif modo_carga_reservas == "Seleccionar reservas según datos del viaje":
+            reservas_seleccionadas = st.multiselect(
+                "Reservas disponibles del viaje",
+                RESERVAS_DEMO,
+                placeholder="Seleccione una o varias reservas...",
+                help="En una versión real, este listado se filtraría según temporada, viaje real y alcance seleccionado.",
+            )
 
     elif alcance_reservas == "Todas las Reservas":
         reservas_seleccionadas = ["Todas las Reservas"]
@@ -283,8 +314,9 @@ with st.container(border=True):
             if alcance_viaje in ["SECTOR", "ROOMING", "CIUDAD"] and not seleccion_detalle:
                 errores.append("Debe seleccionar al menos un detalle del alcance.")
 
-        if tipo_mensaje == "APP" and not detalle_alcance:
-            errores.append("Debe seleccionar una opción APP.")
+        if tipo_mensaje == "APP":
+            if not detalle_alcance:
+                errores.append("Debe seleccionar una opción APP.")
 
         if not destino_nota:
             errores.append("Debe seleccionar el destino de la nota.")
@@ -292,8 +324,11 @@ with st.container(border=True):
         if not alcance_reservas:
             errores.append("Debe seleccionar a qué reservas se dirige el mensaje.")
 
+        if alcance_reservas == "Varias Reservas" and not modo_carga_reservas:
+            errores.append("Debe seleccionar el modo de carga de reservas.")
+
         if alcance_reservas in ["Reserva Específica", "Varias Reservas"] and not reservas_seleccionadas:
-            errores.append("Debe seleccionar al menos una reserva.")
+            errores.append("Debe ingresar o seleccionar al menos una reserva.")
 
         if not asunto.strip():
             errores.append("Debe ingresar un título interno.")
