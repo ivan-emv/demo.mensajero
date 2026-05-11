@@ -9,6 +9,24 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+hide_streamlit_style = """
+    <style>
+        /* Oculta el menú hamburguesa de Streamlit y el footer */
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+
+        /* Mantén el header visible para conservar el botón de expandir/contraer la barra lateral.
+           Solo ocultamos las acciones de la derecha (Share / Favorito) */
+        header [data-testid="stToolbarActions"] {display: none !important;}
+
+        /* En algunas versiones, Share/Fav aparecen dentro del AppToolbar */
+        [data-testid="stAppToolbar"] [data-testid="stToolbarActions"] {display: none !important;}
+    </style>
+"""
+
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
+
 TEMPORADAS = ["2025/2026", "2026/2027", "2027/2028"]
 
 TIPOS_MENSAJE = ["VIAJE REAL", "APP"]
