@@ -35,8 +35,8 @@ VIAJES_REALES = [
     "SCTOPO",
     "SCANDALU",
     "MIESTE",
-    "SCTPAR",
-    "SCTROM",
+    "SCLONPAR",
+    "SCROMVIE",
 ]
 
 ALCANCES_VIAJE = ["SECTOR", "ROOMING", "CIUDAD"]
@@ -86,12 +86,12 @@ ALCANCE_RESERVAS = [
 ]
 
 RESERVAS_DEMO = [
-    "EMV-100245",
-    "EMV-100246",
-    "EMV-100247",
-    "EMV-100248",
-    "EMV-100249",
-    "EMV-100250",
+    "SC123456",
+    "ST123456",
+    "MI123456",
+    "EM123456",
+    "KN123456",
+    "AO123456",
 ]
 
 if "mensajes" not in st.session_state:
